@@ -6,12 +6,14 @@ const BACKEND_URL = process.env.BACKEND_URL;
 export const socketAuth = (opt = {}) => {
     return async (socket, next) => {
         try {
+            console.log("started websocket auth");
             
             const cookieHeader = socket.request?.headers?.cookie || '';
             
             if (!cookieHeader) {
                 return next(new SocketError('Authentication required', 'AUTH_REQUIRED'));
             }
+            console.log(cookieHeader);
             
             // Send cookies to backend for verification
             const resp = await axios.get(`${BACKEND_URL}/auth/me`, {
@@ -22,6 +24,7 @@ export const socketAuth = (opt = {}) => {
                 withCredentials: true,
                 timeout: 10000
             });
+            console.log(resp);
             
             const user = resp.data?.data;
             if (!user?.id) {
