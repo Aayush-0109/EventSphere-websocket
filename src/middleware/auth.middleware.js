@@ -11,6 +11,7 @@ export const socketAuth = (opt = {}) => {
             const cookieHeader = socket.request?.headers?.cookie || '';
             
             if (!cookieHeader) {
+                console.log("cookies not recieved")
                 return next(new SocketError('Authentication required', 'AUTH_REQUIRED'));
             }
             console.log(cookieHeader);
