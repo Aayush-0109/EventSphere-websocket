@@ -1,19 +1,28 @@
-import  jwt  from 'jsonwebtoken'
 import { SocketError } from '../utils/socketError.js';
-import axios from 'axios'
+import axios from 'axios';
 
-const BACKEND_URL = process.env.BACKEND_URL
+const BACKEND_URL = process.env.BACKEND_URL;
+
 export const socketAuth = (opt = {}) => {
     return async (socket, next) => {
         try {
+            
             const cookieHeader = socket.request?.headers?.cookie || '';
+            
             if (!cookieHeader) {
                 return next(new SocketError('Authentication required', 'AUTH_REQUIRED'));
             }
-            const resp = await axios.get(`${BACKEND_URL}/api/v1/auth/me`, {
-                headers: { Cookie: cookieHeader },
-                timeout: 2000
+            
+            // Send cookies to backend for verification
+            const resp = await axios.get(`${BACKEND_URL}/auth/me`, {
+                headers: { 
+                    Cookie: cookieHeader,
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true,
+                timeout: 10000
             });
+            
             const user = resp.data?.data;
             if (!user?.id) {
                 return next(new SocketError('Authentication failed', 'AUTH_FAILED'));
@@ -22,12 +31,18 @@ export const socketAuth = (opt = {}) => {
             socket.user = user;
             return next();
 
-
-
         } catch (error) {
+            console.error('WebSocket auth error:', {
+                message: error.response?.data?.message || error.message,
+                status: error.response?.status,
+                hasCookies: !!socket.request?.headers?.cookie
+            });
+            
             const err = error instanceof SocketError
                 ? error
-                : new SocketError('Authentication failed', 'AUTH_FAILED', { reason: 'invalid_or_missing_token' });
+                : new SocketError('Authentication failed', 'AUTH_FAILED', { 
+                    reason: error.response?.status === 401 ? 'invalid_cookies' : 'server_error' 
+                });
             next(err);
         }
     }

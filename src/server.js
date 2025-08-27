@@ -110,7 +110,7 @@ async function startServer() {
         await redisService.connect();
         await redisService.subscribe(CH.notifications, handleNotification);
         await redisService.subscribe(CH.admin, handleAdminNotification);
-        const PORT = process.env.WEBSOCKET_PORT || 8001
+        const PORT = process.env.PORT || 8001
         await connectDB().catch((reason) => { throw new Error(reason) })
         server.listen(PORT, () => {
             console.log(`🚀 WebSocket server running on port ${PORT}`);
