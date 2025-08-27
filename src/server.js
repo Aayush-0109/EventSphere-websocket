@@ -47,7 +47,13 @@ const { handleAdminNotification, handleNotification } = makeNotificationHandlers
 
 io.on('connection', (socket) => {
 
-    
+    // Debug: user payload and room joins
+    console.log('connected:', socket.id, 'user:', socket.user);
+    try {
+        console.log('joining rooms:', ROOMS.USER(socket.user.id), ROOMS.ROLE(socket.user.role));
+    } catch (e) {
+        console.log('room join debug failed', e?.message);
+    }
     if (socket?.user?.role === "ADMIN") {
         handleAdminEvents(io, socket)
         handleOrganizerEvents(socket)
@@ -70,7 +76,7 @@ io.on('connection', (socket) => {
     })
 
 
-    
+
     socket.on('disconnect', (reason) => {
 
         const onlineCount = onlineService.removeUser(socket);
@@ -92,6 +98,7 @@ const startStatsInterval = () => {
 
         try {
             const stats = await computeAdminStats();
+            console.log('emit:', EVENTS.ADMIN.STATS_UPDATE, 'rooms→', ROOMS.ADMIN, 'stats:', stats);
             io.to(ROOMS.ADMIN).emit(EVENTS.ADMIN.STATS_UPDATE, stats)
         } catch (error) {
             console.error('Error in stats interval:', error);
