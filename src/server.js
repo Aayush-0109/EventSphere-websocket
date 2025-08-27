@@ -98,7 +98,6 @@ const startStatsInterval = () => {
 
         try {
             const stats = await computeAdminStats();
-            console.log('emit:', EVENTS.ADMIN.STATS_UPDATE, 'rooms→', ROOMS.ADMIN, 'stats:', stats);
             io.to(ROOMS.ADMIN).emit(EVENTS.ADMIN.STATS_UPDATE, stats)
         } catch (error) {
             console.error('Error in stats interval:', error);
